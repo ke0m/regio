@@ -13,8 +13,8 @@ class axes:
 
   def __init__(self, n, o, d, label=None):
     self.ndims = len(n)
-    assert (len(o) == self.ndims or
-            len(d) == self.ndims), "Error: the size of n, o and d do not match."
+    if len(o) != self.ndims or len(d) != self.ndims:
+      raise ValueError("the size of n, o and d do not match.")
     self.n = n
     self.o = o
     self.d = d
@@ -58,8 +58,8 @@ class sep:
     """ Reads a SEP header file from tag and returns the axes """
     self.hdict = {}
     # Get the filename with the given tag
-    assert (tag is not None or
-            ifname is not None), "Need either a tag or inputfile for reading.\n"
+    if tag is None and ifname is None:
+      raise ValueError("Need either a tag or inputfile for reading")
     if (tag is not None):
       hin = self.get_fname(tag)
       assert (hin is not None), "No file associated with tag '%s'" % (tag)
@@ -143,8 +143,8 @@ class sep:
     """ Reads a SEP header file and returns a dictionary """
     hdict = {}
     # Get the filename with the given tag
-    assert (tag is not None or
-            ifname is not None), "Need either a tag or inputfile for reading.\n"
+    if tag is None and ifname is None:
+      raise ValueError("Need either a tag or inputfile for reading")
     if tag is not None:
       hin = self.get_fname(tag=tag)
       assert (hin is not None), "No file associated with tag '%s'" % (tag)
@@ -242,9 +242,9 @@ class sep:
       ofname = self.get_fname(tag)
 
     if (tag == "out"):
-      assert (
-          ofname is not None
-      ), "No output file name found. To work with tags you must pass argv to constructor."
+      if ofname is None:
+        raise ValueError("No output file name found. \
+        To work with tags you must pass argv to the constructor.")
       fout = open(ofname, "a")
     else:
       fout = open(ofname, "w+")
@@ -344,8 +344,8 @@ class sep:
       elif (form == 'native'):
         dtype = '<f'
       else:
-        raise Exception('Failed to write file. Format %s not recognized\n' %
-                        (form))
+        raise ValueError('Failed to write file. Format %s not recognized\n' %
+                         (form))
     elif ("c" in "%s" % (data.dtype)):
       esize = 8
       if (form == 'xdr'):
@@ -353,22 +353,24 @@ class sep:
       elif (form == 'native'):
         dtype = '<c8'
       else:
-        raise Exception('Failed to write file. Format %s not recognized\n' %
-                        (form))
+        raise ValueError('Failed to write file. Format %s not recognized\n' %
+                         (form))
     else:
-      raise Exception("Error: can only write real or complex data")
+      raise ValueError("Error: can only write real or complex data")
 
     return esize, dtype
 
-  def write_file(self,
-                 ofname,
-                 data,
-                 os=None,
-                 ds=None,
-                 ofaxes=None,
-                 tag=None,
-                 dpath=None,
-                 form='xdr'):
+  def write_file(
+      self,
+      ofname,
+      data,
+      os=None,
+      ds=None,
+      ofaxes=None,
+      tag=None,
+      dpath=None,
+      form='xdr',
+  ):
     """ Writes data and axes to a SEP header and binary """
     # Get data type and esize (real or complex)
     if ("f" in "%s" % (data.dtype)):
@@ -378,8 +380,8 @@ class sep:
       elif (form == 'native'):
         dtype = '<f'
       else:
-        raise Exception('Failed to write file. Format %s not recognized\n' %
-                        (form))
+        raise ValueError('Failed to write file. Format %s not recognized\n' %
+                         (form))
     elif ("c" in "%s" % (data.dtype)):
       esize = 8
       if (form == 'xdr'):
@@ -387,10 +389,10 @@ class sep:
       elif (form == 'native'):
         dtype = '<c8'
       else:
-        raise Exception('Failed to write file. Format %s not recognized\n' %
-                        (form))
+        raise ValueError('Failed to write file. Format %s not recognized\n' %
+                         (form))
     else:
-      raise Exception("Error: can only write real or complex data")
+      raise ValueError("Error: can only write real or complex data")
     # Write header
     opath = self.write_header(ofname, data.shape, esize, os, ds, ofaxes, tag,
                               dpath, form)
@@ -423,7 +425,7 @@ class sep:
       dnew = faxes.d[-1]
 
     elif (diffn == 0):
-      if (newaxis == False):
+      if (newaxis is False):
         # Appending examples to an already appended file
         # (input and output are same size)
         odim = faxes.ndims
@@ -466,9 +468,9 @@ class sep:
         dnew = 1.0
 
     else:
-      raise Exception("Input shape not correct for appending to file. \
+      raise ValueError("Input shape not correct for appending to file. \
                        Output ndim is %d and input is %d" %
-                      (len(data.shape), len(faxes.n)))
+                       (len(data.shape), len(faxes.n)))
 
     # Write info to header
     if ofname is None:
@@ -490,16 +492,17 @@ class sep:
   def to_header(self, ofname, info, tag=None):
     """ Writes any auxiliary information to header """
     fout = None
-    assert (tag is None or ofname
-            is not None), "Need a tag or output file name to write a header."
+    if tag is not None and ofname is not None:
+      raise ValueError("Need a tag or output file name to write a header.")
     if tag is not None:
       ofname = self.get_fname(tag)
 
     # Open file header
     if tag == "out":
-      assert (
-          ofname is not None
-      ), "No output file name found. To work with tags, you must pass argv to constructor."
+      if ofname is None:
+        raise ValueError("No output file name found. \
+                         To work with tags, you must pass \
+                         argv to the constructor")
       fout = open(ofname, "a")
     else:
       fout = open(ofname, "a+")
@@ -508,7 +511,7 @@ class sep:
 
   def write_dummyaxis(self, ofname, dim, tag=None):
     """ Writes a single axis to a SEP header """
-    if (ofname == None):
+    if ofname is None:
       ofname = self.get_fname(tag)
 
     fout = open(ofname, "a")
