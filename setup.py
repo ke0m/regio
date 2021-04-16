@@ -17,7 +17,6 @@ setup(
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
-    install_requires=['numpy', 'getpass', 'datetime'],
     keywords=['python', 'hypercube', 'regularly sampled', 'regular'],
     classifiers=[
         "Intended Audience :: Seismic processing/imaging",
